@@ -1,55 +1,21 @@
+
+# plus RlPipelineCfg and cfg_registry, copy the import lines from g1_cfg.py
+
 from robojudo.config import cfg_registry
-from robojudo.controller.ctrl_cfgs import (
-    JoystickCtrlCfg,  # noqa: F401
-    KeyboardCtrlCfg,  # noqa: F401
-    UnitreeCtrlCfg,  # noqa: F401
-)
+from robojudo.controller.ctrl_cfgs import BeyondMimicCtrlCfg, KeyboardCtrlCfg
+from robojudo.pipeline.pipeline_cfgs import RlPipelineCfg
+from robojudo.tools.tool_cfgs import DoFConfig
+
+from .ctrl.g1_beyondmimic_ctrl_cfg import G1BeyondmimicCtrlCfg
+from .env.g1_mujuco_env_cfg import G1MujocoEnvCfg
+from .policy.g1_beyondmimic_policy_cfg import G1BeyondMimicPolicyCfg
 from robojudo.pipeline.pipeline_cfgs import (
     RlLocoMimicPipelineCfg,  # noqa: F401
     RlMultiPolicyPipelineCfg,  # noqa: F401
     RlPipelineCfg,  # noqa: F401
 )
-
-from .ctrl.g1_beyondmimic_ctrl_cfg import G1BeyondmimicCtrlCfg  # noqa: F401
-from .ctrl.g1_motion_ctrl_cfg import (  # noqa: F401
-    G1MotionCtrlCfg,
-    G1MotionH2HCtrlCfg,
-    G1MotionKungfuBotCtrlCfg,
-    G1MotionTwistCtrlCfg,
-)
-from .ctrl.g1_twist_redis_ctrl_cfg import G1TwistRedisCtrlCfg  # noqa: F401
-from .env.g1_dummy_env_cfg import G1DummyEnvCfg  # noqa: F401
-from .env.g1_mujuco_env_cfg import G1_12MujocoEnvCfg, G1_23MujocoEnvCfg, G1MujocoEnvCfg  # noqa: F401
-from .env.g1_real_env_cfg import G1RealEnvCfg, G1UnitreeCfg  # noqa: F401
-from .policy.g1_amo_policy_cfg import G1AmoPolicyCfg  # noqa: F401
-from .policy.g1_asap_policy_cfg import G1AsapLocoPolicyCfg, G1AsapPolicyCfg  # noqa: F401
-from .policy.g1_beyondmimic_policy_cfg import G1BeyondMimicPolicyCfg  # noqa: F401
-from .policy.g1_h2h_policy_cfg import G1H2HPolicyCfg  # noqa: F401
-from .policy.g1_kungfubot_policy_cfg import G1KungfuBotGeneralPolicyCfg, G1KungfuBotPolicyCfg  # noqa: F401
-from .policy.g1_smooth_policy_cfg import G1SmoothPolicyCfg  # noqa: F401
-from .policy.g1_twist_policy_cfg import G1TwistPolicyCfg  # noqa: F401
 from .policy.g1_unitree_policy_cfg import G1UnitreePolicyCfg, G1UnitreeWoGaitPolicyCfg  # noqa: F401
-
-# ======================== Custom Configs ======================== #
-"""
-Add your custom config here.
-"""
-
-
-@cfg_registry.register
-class g1_dev(RlPipelineCfg):
-    robot: str = "g1"
-    env: G1_23MujocoEnvCfg = G1_23MujocoEnvCfg()
-
-    ctrl: list[KeyboardCtrlCfg] = [
-        KeyboardCtrlCfg(),
-    ]
-
-    policy: G1UnitreePolicyCfg = G1UnitreePolicyCfg()
-
-from robojudo.controller.ctrl_cfgs import BeyondMimicCtrlCfg  # noqa: F401
-from robojudo.tools.tool_cfgs import DoFConfig  # noqa: F401
-
+ 
 
 class G1MjlabDoF(DoFConfig):
     """SDK joint order: left leg 6, right leg 6, waist 3, left arm 7, right arm 7."""
@@ -91,39 +57,40 @@ class G1MjlabDoF(DoFConfig):
         *[0.907, 0.907, 0.907, 0.907, 0.907, 1.068, 1.068],
         *[0.907, 0.907, 0.907, 0.907, 0.907, 1.068, 1.068],
     ]
-
-
+    
 class G1MjlabPolicyCfg(G1BeyondMimicPolicyCfg):
     policy_type: str = "MjlabTrackingPolicy"
-    policy_name: str = "mjlab_walk"          # assets/models/g1/beyondmimic/mjlab_walk.onnx
-
+    policy_name: str = "mjlab_walk"
     obs_dof: DoFConfig = G1MjlabDoF()
     action_dof: DoFConfig = obs_dof
-
     action_beta: float = 1.0
     without_state_estimator: bool = True
     use_modelmeta_config: bool = False
     use_motion_from_model: bool = False
 
     action_scales: list[float] = [
+        # left leg: hip pitch, hip roll, hip yaw, knee, ankle pitch, ankle roll
         *[0.5475464629911068, 0.35066146637882434, 0.5475464629911068,
           0.35066146637882434, 0.43857731392336724, 0.43857731392336724],
+        # right leg
         *[0.5475464629911068, 0.35066146637882434, 0.5475464629911068,
           0.35066146637882434, 0.43857731392336724, 0.43857731392336724],
+        # waist: yaw, roll, pitch
         *[0.5475464629911068, 0.43857731392336724, 0.43857731392336724],
+        # left arm: shoulder p/r/y, elbow, wrist roll, wrist pitch, wrist yaw
         *[0.43857731392336724, 0.43857731392336724, 0.43857731392336724,
           0.43857731392336724, 0.43857731392336724,
           0.07450087032950714, 0.07450087032950714],
+        # right arm
         *[0.43857731392336724, 0.43857731392336724, 0.43857731392336724,
           0.43857731392336724, 0.43857731392336724,
           0.07450087032950714, 0.07450087032950714],
     ]
 
-
-class G1MjlabCtrlCfg(BeyondMimicCtrlCfg):
-    robot : str = "g1"
+class G1MjlabCtrlCfg(G1BeyondmimicCtrlCfg):
     motion_name: str = "walk_chunk_0000"
     override_robot_anchor_pos: bool = True
+
     motion_cfg: BeyondMimicCtrlCfg.MotionCommandCfg = BeyondMimicCtrlCfg.MotionCommandCfg(
         anchor_body_name="torso_link",
         body_names=[
@@ -150,17 +117,22 @@ class G1MjlabCtrlCfg(BeyondMimicCtrlCfg):
         ],
     )
 
-"""
 @cfg_registry.register
 class g1_mjlab_walk(RlPipelineCfg):
-    My mjlab tracking policy, 154-dim obs, motion from npz via BeyondMimicCtrl.
+    robot: str = "g1"
+    env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
+    ctrl: list[KeyboardCtrlCfg | G1MjlabCtrlCfg] = [KeyboardCtrlCfg(), G1MjlabCtrlCfg()]
+    policy: G1MjlabPolicyCfg = G1MjlabPolicyCfg()
 
+@cfg_registry.register
+class g1_mjlab_locomimic(RlLocoMimicPipelineCfg):
     robot: str = "g1"
     env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
     ctrl: list[KeyboardCtrlCfg | G1MjlabCtrlCfg] = [
-        KeyboardCtrlCfg(),
+        KeyboardCtrlCfg(
+            triggers_extra={"]": "[POLICY_LOCO]", "[": "[POLICY_MIMIC]"}
+        ),
         G1MjlabCtrlCfg(),
     ]
-    policy: G1MjlabPolicyCfg = G1MjlabPolicyCfg()
-
-"""
+    loco_policy: G1UnitreePolicyCfg = G1UnitreePolicyCfg()
+    mimic_policies: list[G1MjlabPolicyCfg] = [G1MjlabPolicyCfg()]

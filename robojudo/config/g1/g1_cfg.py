@@ -118,7 +118,7 @@ class g1_locomimic(RlLocoMimicPipelineCfg):
     """
 
     robot: str = "g1"
-    env: G1MujocoEnvCfg = G1MujocoEnvCfg()
+    env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
 
     ctrl: list[KeyboardCtrlCfg | JoystickCtrlCfg] = [
         KeyboardCtrlCfg(
@@ -158,7 +158,26 @@ class g1_h2h(RlPipelineCfg):
     ]
 
     policy: G1H2HPolicyCfg = G1H2HPolicyCfg()
+"""
+@cfg_registry.register
+class g1_mjlab_walk(RlPipelineCfg):
+    My mjlab tracking policy, 154-dim, external npz motion.
 
+    robot: str = "g1"
+    env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
+    ctrl: list[KeyboardCtrlCfg | G1BeyondmimicCtrlCfg] = [
+        KeyboardCtrlCfg(),
+        G1BeyondmimicCtrlCfg(
+            motion_name="walk_chunk_0000",
+        ),
+    ]
+    policy: G1BeyondMimicPolicyCfg = G1BeyondMimicPolicyCfg(
+        policy_name="mjlab_walk",
+        without_state_estimator=True,
+        use_modelmeta_config=False,
+        use_motion_from_model=False,
+    )
+"""
 
 @cfg_registry.register
 class g1_beyondmimic(RlPipelineCfg):
@@ -167,7 +186,7 @@ class g1_beyondmimic(RlPipelineCfg):
     """
 
     robot: str = "g1"
-    env: G1MujocoEnvCfg = G1MujocoEnvCfg()
+    env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
     ctrl: list[KeyboardCtrlCfg] = [
         KeyboardCtrlCfg(),
     ]
