@@ -8,6 +8,7 @@ from robojudo.tools.tool_cfgs import DoFConfig
 
 from .ctrl.g1_beyondmimic_ctrl_cfg import G1BeyondmimicCtrlCfg
 from .env.g1_mujuco_env_cfg import G1MujocoEnvCfg
+from .env.g1_real_env_cfg import G1RealEnvCfg, G1UnitreeCfg  # noqa: 
 from .policy.g1_beyondmimic_policy_cfg import G1BeyondMimicPolicyCfg
 from robojudo.pipeline.pipeline_cfgs import (
     RlLocoMimicPipelineCfg,  # noqa: F401
@@ -131,6 +132,23 @@ class g1_mjlab_locomimic(RlLocoMimicPipelineCfg):
     ctrl: list[KeyboardCtrlCfg | G1MjlabCtrlCfg] = [
         KeyboardCtrlCfg(
             triggers_extra={"]": "[POLICY_LOCO]", "[": "[POLICY_MIMIC]"}
+        ),
+        G1MjlabCtrlCfg(),
+    ]
+    loco_policy: G1UnitreePolicyCfg = G1UnitreePolicyCfg()
+    mimic_policies: list[G1MjlabPolicyCfg] = [G1MjlabPolicyCfg()]
+
+@cfg_registry.register
+class g1_mjlab_locomimic_real(RlLocoMimicPipelineCfg):
+    robot: str = "g1"
+    env: G1RealEnvCfg = G1RealEnvCfg(
+        env_type="UnitreeEnv",
+        unitree=G1UnitreeCfg(net_if="eth0"),   # NEED TO SET THIS!
+    )
+    ctrl: list[KeyboardCtrlCfg | G1MjlabCtrlCfg] = [
+        KeyboardCtrlCfg(
+            triggers={"i": "[SIM_REBORN]", "o": "[SHUTDOWN]",
+                      "]": "[POLICY_LOCO]", "[": "[POLICY_MIMIC]"}
         ),
         G1MjlabCtrlCfg(),
     ]
