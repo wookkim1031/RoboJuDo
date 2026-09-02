@@ -139,18 +139,23 @@ class g1_mjlab_locomimic(RlLocoMimicPipelineCfg):
     mimic_policies: list[G1MjlabPolicyCfg] = [G1MjlabPolicyCfg()]
 
 @cfg_registry.register
-class g1_mjlab_locomimic_real(RlLocoMimicPipelineCfg):
-    robot: str = "g1"
+class g1_mjlab_locomimic_real(g1_mjlab_locomimic):
+    """Locomotion + mjlab tracking, Sim2Real."""
+
     env: G1RealEnvCfg = G1RealEnvCfg(
         env_type="UnitreeEnv",
-        unitree=G1UnitreeCfg(net_if="eth0"),   # NEED TO SET THIS!
+        unitree=G1UnitreeCfg(net_if="eth0"),   # NEED TO SET THIS
     )
-    ctrl: list[KeyboardCtrlCfg | G1MjlabCtrlCfg] = [
-        KeyboardCtrlCfg(
-            triggers={"i": "[SIM_REBORN]", "o": "[SHUTDOWN]",
-                      "]": "[POLICY_LOCO]", "[": "[POLICY_MIMIC]"}
+    ctrl: list[UnitreeCtrlCfg | G1MjlabCtrlCfg] = [
+        UnitreeCtrlCfg(
+            combination_init_buttons=[],
+            triggers={
+                "A": "[SHUTDOWN]",
+                "Select": "[POLICY_LOCO]",
+                "Start": "[POLICY_MIMIC]",
+            },
         ),
         G1MjlabCtrlCfg(),
     ]
-    loco_policy: G1UnitreePolicyCfg = G1UnitreePolicyCfg()
-    mimic_policies: list[G1MjlabPolicyCfg] = [G1MjlabPolicyCfg()]
+
+    do_safety_check: bool = True
