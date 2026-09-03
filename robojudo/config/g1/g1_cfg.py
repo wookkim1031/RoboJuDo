@@ -331,7 +331,7 @@ class g1_switch_beyondmimic(RlMultiPolicyPipelineCfg):
         KeyboardCtrlCfg(
             triggers_extra={
                 "Key.tab": "[POLICY_TOGGLE]",
-                "-": "[POLICY_SWITCH],0",  # note: with shift
+                ",": "[POLICY_SWITCH],0",  # note: with shift
                 ".": "[POLICY_SWITCH],1",  # note: with shift
                 "#": "[POLICY_SWITCH],2",  # note: with shift
                 "$": "[POLICY_SWITCH],3",  # note: with shift

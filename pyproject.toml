@@ -22,6 +22,7 @@ dependencies = [
     "msgpack>=1.2.2",
     "msgpack-numpy>=0.4.8",
     "mujoco>=3.12.0",
+    "mujoco-python-viewer>=0.1.4",
     "onnxruntime>=1.29.0",
     "pydantic>=2.13.5",
     "pygame>=2.6.1",

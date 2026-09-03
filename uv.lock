@@ -606,6 +606,21 @@ wheels = [
 ]
 
 [[package]]
+name = "mujoco-python-viewer"
+version = "0.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "glfw" },
+    { name = "imageio" },
+    { name = "mujoco" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/40/be/f27036bdd33156156f3e15975db4e5db8c57b115044d55b7bfaf81a1a4f9/mujoco-python-viewer-0.1.4.tar.gz", hash = "sha256:0602ffd47e14e84b90196e09f45bc353a6339dee069fdd70ebb0253913eb849d", size = 10185, upload-time = "2023-11-14T07:02:03.88Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/73/1b87b50091af38d86ada50d8fe3f294335f2d730aa1d124f4c714217fe60/mujoco_python_viewer-0.1.4-py3-none-any.whl", hash = "sha256:c1aa715a00420cb08ee9a2f696491f477952b336432f0b4b754b00d06e9b6b1e", size = 10271, upload-time = "2023-11-14T07:02:02.504Z" },
+]
+
+[[package]]
 name = "networkx"
 version = "3.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1586,6 +1601,7 @@ dependencies = [
     { name = "msgpack" },
     { name = "msgpack-numpy" },
     { name = "mujoco" },
+    { name = "mujoco-python-viewer" },
     { name = "onnxruntime" },
     { name = "pydantic" },
     { name = "pygame" },
@@ -1614,6 +1630,7 @@ requires-dist = [
     { name = "msgpack", specifier = ">=1.2.2" },
     { name = "msgpack-numpy", specifier = ">=0.4.8" },
     { name = "mujoco", specifier = ">=3.12.0" },
+    { name = "mujoco-python-viewer", specifier = ">=0.1.4" },
     { name = "onnxruntime", specifier = ">=1.29.0" },
     { name = "pydantic", specifier = ">=2.13.5" },
     { name = "pygame", specifier = ">=2.6.1" },
