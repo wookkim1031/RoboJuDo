@@ -12,24 +12,53 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.11"
 
-dynamic = ["dependencies"]
+# Populated from requirements.txt with:
+# uv add -r requirements.txt
+dependencies = [
+    "colorlog>=6.12.0",
+    "easydict>=1.13",
+    "imageio[ffmpeg]>=2.37.4",
+    "joblib>=1.6.0",
+    "msgpack>=1.2.2",
+    "msgpack-numpy>=0.4.8",
+    "mujoco>=3.12.0",
+    "onnxruntime>=1.29.0",
+    "pydantic>=2.13.5",
+    "pygame>=2.6.1",
+    "pynput>=1.8.2",
+    "python-box>=7.4.1",
+    "pyyaml>=6.0.3",
+    "scipy>=1.17.1",
+    "torch>=2.14.0",
+    "tqdm>=4.70.0",
+    "zmq>=0.0.0",
+]
 
-[tool.setuptools]
-packages = ["robojudo"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pre-commit==4.3.0",
     "ruff==0.12.7",
 ]
 
+[tool.setuptools]
+packages = ["robojudo"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"
-exclude = ["__pycache__", ".venv", "build", "dist", "logs", "data", "robojudo/controller/motion_lib", "robojudo/policy/hilo", "robojudo/policy/gmt","packages", "third_party"]
+exclude = [
+    "__pycache__",
+    ".venv",
+    "build",
+    "dist",
+    "logs",
+    "data",
+    "robojudo/controller/motion_lib",
+    "robojudo/policy/hilo",
+    "robojudo/policy/gmt",
+    "packages",
+    "third_party",
+]
 lint.select = ["E", "F", "I", "B", "UP"]
 lint.ignore = ["B008"]
 lint.fixable = ["ALL"]
