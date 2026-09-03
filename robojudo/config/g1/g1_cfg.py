@@ -326,25 +326,25 @@ class g1_switch_beyondmimic(RlMultiPolicyPipelineCfg):
     """
 
     robot: str = "g1"
-    env: G1MujocoEnvCfg = G1MujocoEnvCfg()
+    env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
     ctrl: list[KeyboardCtrlCfg | JoystickCtrlCfg] = [
         KeyboardCtrlCfg(
             triggers_extra={
                 "Key.tab": "[POLICY_TOGGLE]",
-                "!": "[POLICY_SWITCH],0",  # note: with shift
-                "@": "[POLICY_SWITCH],1",  # note: with shift
+                "-": "[POLICY_SWITCH],0",  # note: with shift
+                ".": "[POLICY_SWITCH],1",  # note: with shift
                 "#": "[POLICY_SWITCH],2",  # note: with shift
                 "$": "[POLICY_SWITCH],3",  # note: with shift
             }
         ),
-        JoystickCtrlCfg(
-            triggers_extra={
-                "RB+Down": "[POLICY_SWITCH],0",
-                "RB+Left": "[POLICY_SWITCH],1",
-                "RB+Up": "[POLICY_SWITCH],2",
-                "RB+Right": "[POLICY_SWITCH],3",
-            }
-        ),
+        #JoystickCtrlCfg(
+        #    triggers_extra={
+        #        "RB+Down": "[POLICY_SWITCH],0",
+        #        "RB+Left": "[POLICY_SWITCH],1",
+        #        "RB+Up": "[POLICY_SWITCH],2",
+        #        "RB+Right": "[POLICY_SWITCH],3",
+        #    }
+        #),
     ]
 
     policies: list[G1AmoPolicyCfg | G1BeyondMimicPolicyCfg] = [
@@ -424,5 +424,22 @@ class g1_protomotions_tracker_real(g1_protomotions_tracker):
     ]
     do_safety_check: bool = True
 
+@cfg_registry.register
+class g1_switch_beyondmimic_real(g1_switch_beyondmimic):
+    """Dieselben Policies auf echter Hardware."""
 
-# TIPS: check g1_loco_mimic_cfg.py for more complex examples
+    env: G1RealEnvCfg = G1RealEnvCfg(
+        env_type="UnitreeCppEnv",
+        unitree=G1UnitreeCfg(net_if="enp5s0"),
+    )
+    ctrl: list[UnitreeCtrlCfg] = [
+        UnitreeCtrlCfg(
+            triggers_extra={
+                "R1+Down": "[POLICY_SWITCH],0",
+                "R1+Left": "[POLICY_SWITCH],1",
+                "R1+Up": "[POLICY_SWITCH],2",
+                "R1+Right": "[POLICY_SWITCH],3",
+            }
+        ),
+    ]
+    do_safety_check: bool = True

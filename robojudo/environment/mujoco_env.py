@@ -1,8 +1,8 @@
 import logging
 import time
 
-import imageio
 import mujoco
+import mujoco_viewer
 import numpy as np
 
 from robojudo.environment import Environment, env_registry
@@ -11,47 +11,6 @@ from robojudo.environment.utils.mujoco_viz import MujocoVisualizer
 from robojudo.utils.util_func import quat_rotate_inverse_np, quatToEuler
 
 logger = logging.getLogger(__name__)
-
-
-class OffscreenViewer:
-    """Drop-in replacement for mujoco_viewer.MujocoViewer on headless machines.
-
-    Renders offscreen via MuJoCo's own Renderer (respects MUJOCO_GL=egl) and
-    writes every rendered frame to an mp4 instead of opening a GLFW window.
-
-    Implements only the surface MujocoEnv uses:
-        .cam (distance / elevation / azimuth / lookat), .is_alive,
-        .render(), .close(), ._paused
-    """
-
-    def __init__(self, model, data, path="/tmp/rollout.mp4", w=1200, h=900, fps=50):
-        # mujoco.Renderer refuses sizes larger than the model's offscreen buffer,
-        # and MJCF defaults are usually 640x480 -- raise them before constructing.
-        model.vis.global_.offwidth = max(model.vis.global_.offwidth, w)
-        model.vis.global_.offheight = max(model.vis.global_.offheight, h)
-
-        self.model, self.data = model, data
-        self.renderer = mujoco.Renderer(model, height=h, width=w)
-        self.cam = mujoco.MjvCamera()
-        mujoco.mjv_defaultCamera(self.cam)
-
-        self.is_alive = True
-        self._paused = False
-        self._path = path
-        self._writer = imageio.get_writer(path, fps=fps)
-        logger.info("OffscreenViewer recording to %s (%dx%d @ %d fps)", path, w, h, fps)
-
-    def render(self):
-        if not self.is_alive:
-            return
-        self.renderer.update_scene(self.data, camera=self.cam)
-        self._writer.append_data(self.renderer.render())
-
-    def close(self):
-        if self.is_alive:
-            self.is_alive = False
-            self._writer.close()
-            logger.info("OffscreenViewer wrote %s", self._path)
 
 
 @env_registry.register
@@ -72,13 +31,12 @@ class MujocoEnv(Environment):
         # mujoco.mj_resetDataKeyframe(self.model, self.data, 0)
         mujoco.mj_step(self.model, self.data)  # pyright: ignore[reportAttributeAccessIssue]
 
-        self.viewer = OffscreenViewer(
+        self.viewer = mujoco_viewer.MujocoViewer(
             self.model,
             self.data,
-            path="/tmp/rollout.mp4",
-            w=1200,
-            h=900,
-            fps=round(1.0 / self.control_dt),
+            width=1200,
+            height=900,
+            hide_menus=True,
         )
         self.viewer.cam.distance = 3.0
         self.viewer.cam.elevation = -10.0

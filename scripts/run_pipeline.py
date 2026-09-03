@@ -50,25 +50,32 @@ def main():
         pipeline._set_default_pose_mode(True)
         logger.warning("Sim mode — holding default pose, press R to start motion")
 
-    while True:
-        time_start = time.time()
-        pipeline.step()
-        time_end = time.time()
-        time_diff = time_end - time_start
+    try:
+        while True:
+            time_start = time.time()
+            pipeline.step()
+            time_end = time.time()
+            time_diff = time_end - time_start
 
-        # keep the pipeline running at the desired frequency
-        if not cfg.run_fullspeed:
-            time_diff = pipeline.dt - time_diff
-            if time_diff > 0:
-                time.sleep(time_diff)
-            else:
-                if not cfg.env.is_sim:
-                    logger.error(f"Warning: frame drop -> {time_diff}")
-                    if time_diff < -0.2:
-                        logger.critical("Exiting due to excessive frame drop")
-                        pipeline.env.shutdown()
-                        time.sleep(10)
-                        break
+            # keep the pipeline running at the desired frequency
+            if not cfg.run_fullspeed:
+                time_diff = pipeline.dt - time_diff
+                if time_diff > 0:
+                    time.sleep(time_diff)
+                else:
+                    if not cfg.env.is_sim:
+                        logger.error(f"Warning: frame drop -> {time_diff}")
+                        if time_diff < -0.2:
+                            logger.critical("Exiting due to excessive frame drop")
+                            pipeline.env.shutdown()
+                            time.sleep(10)
+                            break
+    except KeyboardInterrupt:
+        logger.warning("Keyboard interupt")
+    except Exception:
+        logger.exception("error in for loop")
+    finally:
+        pipeline.env.shutdown()
 
 
 if __name__ == "__main__":

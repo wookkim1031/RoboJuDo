@@ -177,11 +177,6 @@ class UnitreeCppEnv(Environment):
             if self.enabled:
                 self.unitree.step_hands(hand_pose[0], hand_pose[1])
 
-    def shutdown(self):
-        # self.set_damping_mode()
-        self.enabled = False
-        self.unitree.shutdown()
-
     def set_gains(self, stiffness, damping):
         if not hasattr(self, "unitree"):  # TODO
             return
@@ -189,7 +184,20 @@ class UnitreeCppEnv(Environment):
             return
         self.unitree.set_gains(stiffness, damping)
 
+    def set_damping_mode(self):
+        if not self.enabled:
+            return
+        self.unitree.set_gains(
+            [0.0] * self.num_dofs,
+            [max(kd, 1.0) for kd in self.damping],
+        )
+        self.unitree.step(self.dof_pos.tolist())
 
+    def shutdown(self):
+        self.set_damping_mode()
+        time.sleep(0.1)
+        self.enabled = False
+        self.unitree.shutdown()
 if __name__ == "__main__":
     from robojudo.config.g1.env.g1_real_env_cfg import G1RealEnvCfg
 

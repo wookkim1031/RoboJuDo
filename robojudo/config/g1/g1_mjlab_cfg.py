@@ -5,7 +5,11 @@ from robojudo.config import cfg_registry
 from robojudo.controller.ctrl_cfgs import BeyondMimicCtrlCfg, KeyboardCtrlCfg
 from robojudo.pipeline.pipeline_cfgs import RlPipelineCfg
 from robojudo.tools.tool_cfgs import DoFConfig
-
+from robojudo.controller.ctrl_cfgs import (
+    JoystickCtrlCfg,  # noqa: F401
+    KeyboardCtrlCfg,  # noqa: F401
+    UnitreeCtrlCfg,  # noqa: F401
+)
 from .ctrl.g1_beyondmimic_ctrl_cfg import G1BeyondmimicCtrlCfg
 from .env.g1_mujuco_env_cfg import G1MujocoEnvCfg
 from .env.g1_real_env_cfg import G1RealEnvCfg, G1UnitreeCfg  # noqa: 
