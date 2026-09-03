@@ -851,25 +851,71 @@ class MujocoEnv(Environment):
         # mujoco.mj_resetDataKeyframe(self.model, self.data, 0)
         mujoco.mj_step(self.model, self.data)  # pyright: ignore[reportAttributeAccessIssue]
 
-        # self.viewer = mujoco_viewer.MujocoViewer(
+        # # self.viewer = mujoco_viewer.MujocoViewer(
+        # #     self.model,
+        # #     self.data,
+        # #     width=1200,
+        # #     height=900,
+        # #     hide_menus=True,
+        # # )
+        # # self.viewer.cam.distance = 3.0
+        # # self.viewer.cam.elevation = -10.0
+        # # self.viewer.cam.azimuth = 180.0
+        # # self.viewer._paused = True
+        # self.viewer = LiveViewer(
         #     self.model,
         #     self.data,
-        #     width=1200,
-        #     height=900,
-        #     hide_menus=True,
+        #     path=Path("./tmp") / "rollout.mp4",
+        #     w=1200,
+        #     h=900,
+        #     fps=round(1.0 / self.control_dt),
         # )
-        # self.viewer.cam.distance = 3.0
-        # self.viewer.cam.elevation = -10.0
-        # self.viewer.cam.azimuth = 180.0
-        # self.viewer._paused = True
-        self.viewer = LiveViewer(
-            self.model,
-            self.data,
-            path=Path("./tmp") / "rollout.mp4",
-            w=1200,
-            h=900,
-            fps=round(1.0 / self.control_dt),
-        )
+        import os
+        viewer_type = os.environ.get("ROBOJUDO_VIEWER", "auto").lower()
+
+        if viewer_type == "live":
+            self.viewer = LiveViewer(
+                self.model,
+                self.data,
+                path=Path("./tmp") / "rollout.mp4",
+                w=1200,
+                h=900,
+                fps=round(1.0 / self.control_dt),
+            )
+
+        elif viewer_type == "offscreen":
+            self.viewer = OffscreenViewer(
+                self.model,
+                self.data,
+                path=Path("./tmp") / "rollout.mp4",
+                w=1200,
+                h=900,
+                fps=round(1.0 / self.control_dt),
+            )
+
+        elif os.environ.get("DISPLAY"):
+            self.viewer = LiveViewer(
+                self.model,
+                self.data,
+                path=Path("./tmp") / "rollout.mp4",
+                w=1200,
+                h=900,
+                fps=round(1.0 / self.control_dt),
+            )
+
+        else:
+            logger.warning(
+                "DISPLAY is not set; using OffscreenViewer instead of LiveViewer"
+            )
+
+            self.viewer = OffscreenViewer(
+                self.model,
+                self.data,
+                path=Path("./tmp") / "rollout.mp4",
+                w=1200,
+                h=900,
+                fps=round(1.0 / self.control_dt),
+            )
 
         if cfg_env.visualize_extras:
             self.visualizer = MujocoVisualizer(self.viewer)
