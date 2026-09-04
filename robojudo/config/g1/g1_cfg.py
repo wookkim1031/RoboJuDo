@@ -326,7 +326,9 @@ class g1_switch_beyondmimic(RlMultiPolicyPipelineCfg):
     """
 
     robot: str = "g1"
-    env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
+    # "window" on mac
+    # "live" on windows
+    env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False, viewer="window")
     ctrl: list[KeyboardCtrlCfg | JoystickCtrlCfg] = [
         KeyboardCtrlCfg(
             triggers_extra={

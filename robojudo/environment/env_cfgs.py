@@ -34,6 +34,8 @@ class MujocoEnvCfg(EnvCfg):
     sim_dt: float = 0.001
     sim_decimation: int = 20
 
+    viewer: str = "auto" # "auto" | "live" | "offscreen"
+
     visualize_extras: bool = True  # TODO: remove
 
     random_heading: bool = False

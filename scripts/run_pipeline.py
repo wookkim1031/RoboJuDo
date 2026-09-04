@@ -26,6 +26,12 @@ def parse_args():
         default="g1",
         help="Name of the config class to use",
     )
+    parser.add_argument(
+        "-env",
+        type=str,
+        default=None,
+        help="Netzwerk-Interface zum Roboter (z.B. enp5s0)",
+    )
     args = parser.parse_args()
     return args
 
@@ -41,6 +47,10 @@ def main():
 
     pipeline_class: type[RlPipeline] = getattr(robojudo.pipeline, pipeline_type)
     logger.info(f"Using pipeline: {pipeline_type} -> {pipeline_class}")
+
+    if not cfg.env.is_sim and args.env is not None:
+        cfg.env.unitree.net_if = args.env
+        logger.info(f"net_if override: {args.env}")
 
     pipeline = pipeline_class(cfg=cfg)
 
@@ -70,10 +80,13 @@ def main():
                             pipeline.env.shutdown()
                             time.sleep(10)
                             break
+
     except KeyboardInterrupt:
         logger.warning("Keyboard interupt")
+
     except Exception:
         logger.exception("error in for loop")
+
     finally:
         pipeline.env.shutdown()
 
