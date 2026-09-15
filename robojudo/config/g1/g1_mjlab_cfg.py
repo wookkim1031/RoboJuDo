@@ -18,6 +18,7 @@ from robojudo.pipeline.pipeline_cfgs import (
     RlLocoMimicPipelineCfg,  # noqa: F401
     RlMultiPolicyPipelineCfg,  # noqa: F401
     RlPipelineCfg,  # noqa: F401
+    RlLocoGrootPipelineCfg
 )
 from .policy.g1_unitree_policy_cfg import G1UnitreePolicyCfg, G1UnitreeWoGaitPolicyCfg  # noqa: F401
  
@@ -141,6 +142,26 @@ class g1_mjlab_locomimic(RlLocoMimicPipelineCfg):
     ]
     loco_policy: G1UnitreePolicyCfg = G1UnitreePolicyCfg()
     mimic_policies: list[G1MjlabPolicyCfg] = [G1MjlabPolicyCfg()]
+
+@cfg_registry.register
+class g1_groot(RlLocoGrootPipelineCfg):
+    robot:str = "g1"
+    env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
+    ctrl: list[KeyboardCtrlCfg] = [
+        KeyboardCtrlCfg(triggers_extra={
+            "g": "[GROOT_ON]",
+            "h": "[GROOT_OFF]",
+            "o": "[SHUTDOWN]",
+        }),
+    ]
+
+    loco_policy: G1UnitreePolicyCfg = G1UnitreePolicyCfg()
+    upper_dof_num: int = 14
+    upper_dof_pos_default: list[float] | None = [
+        -0.0246,  0.2920,  0.2867, -0.7067, -0.1934,  0.1798, -0.1384,  # left arm
+        -0.0829, -0.2815, -0.1559, -0.8828,  0.2682,  0.3707,  0.1563,  # right arm
+    ]
+    do_safety_check: bool = True  
 
 @cfg_registry.register
 class g1_mjlab_locomimic_real(g1_mjlab_locomimic):

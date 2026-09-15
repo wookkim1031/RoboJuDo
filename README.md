@@ -1,6 +1,8 @@
 <div align="center">
 <h1>RoboJuDo 🤖</h1>
 
+<h2>Run python scripts/run_pipeline.py -c g1_switch_beyondmimic -env eth10</h2>
+
 *A plug-and-play deploy framework for robots. Just deploy, just do.*
 
 <h3>

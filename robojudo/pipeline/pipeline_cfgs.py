@@ -88,3 +88,10 @@ class RlLocoMimicPipelineCfg(PipelineCfg):
                     )
 
         return self
+
+class RlLocoGrootPipelineCfg(RlLocoMimicPipelineCfg):
+    pipeline_type: str = "RlLocoGrootPipeline"
+    groot_host: str = "127.0.0.1"
+    groot_port: int = 5555
+    groot_prompt: str = "pick up the apple"
+    groot_execution_horizon: int = 16
