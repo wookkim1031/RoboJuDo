@@ -95,3 +95,4 @@ class RlLocoGrootPipelineCfg(RlLocoMimicPipelineCfg):
     groot_port: int = 5555
     groot_prompt: str = "pick up the apple"
     groot_execution_horizon: int = 16
+    groot_auto_engage_s: float = 0.0

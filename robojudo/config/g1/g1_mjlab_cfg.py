@@ -21,6 +21,7 @@ from robojudo.pipeline.pipeline_cfgs import (
     RlLocoGrootPipelineCfg
 )
 from .policy.g1_unitree_policy_cfg import G1UnitreePolicyCfg, G1UnitreeWoGaitPolicyCfg  # noqa: F401
+from .policy.g1_amo_policy_cfg import G1AmoPolicyCfg  # noqa: F401
  
 
 class G1MjlabDoF(DoFConfig):
@@ -147,6 +148,8 @@ class g1_mjlab_locomimic(RlLocoMimicPipelineCfg):
 class g1_groot(RlLocoGrootPipelineCfg):
     robot:str = "g1"
     env: G1MujocoEnvCfg = G1MujocoEnvCfg(visualize_extras=False)
+    ctrl: list = [] 
+    """
     ctrl: list[KeyboardCtrlCfg] = [
         KeyboardCtrlCfg(triggers_extra={
             "g": "[GROOT_ON]",
@@ -154,14 +157,40 @@ class g1_groot(RlLocoGrootPipelineCfg):
             "o": "[SHUTDOWN]",
         }),
     ]
+    """
 
-    loco_policy: G1UnitreePolicyCfg = G1UnitreePolicyCfg()
+    loco_policy: G1AmoPolicyCfg = G1AmoPolicyCfg()
+    mimic_policies: list = [G1AmoPolicyCfg()]
     upper_dof_num: int = 14
     upper_dof_pos_default: list[float] | None = [
-        -0.0246,  0.2920,  0.2867, -0.7067, -0.1934,  0.1798, -0.1384,  # left arm
-        -0.0829, -0.2815, -0.1559, -0.8828,  0.2682,  0.3707,  0.1563,  # right arm
+        -0.0246,  0.2920,  0.2867, -0.7067, -0.1934,  0.1798, -0.1384,
+        -0.0829, -0.2815, -0.1559, -0.8828,  0.2682,  0.3707,  0.1563,
     ]
+    groot_auto_engage_s: float = 3.0
     do_safety_check: bool = True  
+
+@cfg_registry.register
+class g1_groot_real(RlLocoGrootPipelineCfg):
+    robot: str = "g1"
+    env: G1RealEnvCfg = G1RealEnvCfg(
+        env_type="UnitreeCppEnv",
+        unitree=G1UnitreeCfg(net_if="eth0"),   # set from `ip link` tomorrow
+    )
+    ctrl: list[UnitreeCtrlCfg] = [
+        UnitreeCtrlCfg(triggers_extra={
+            "R1+Up": "[GROOT_ON]",
+            "R1+Down": "[GROOT_OFF]",
+        }),
+    ]
+    loco_policy: G1AmoPolicyCfg = G1AmoPolicyCfg()
+    mimic_policies: list = [G1AmoPolicyCfg()]
+    upper_dof_num: int = 14
+    upper_dof_pos_default: list[float] | None = [
+        -0.0246,  0.2920,  0.2867, -0.7067, -0.1934,  0.1798, -0.1384,
+        -0.0829, -0.2815, -0.1559, -0.8828,  0.2682,  0.3707,  0.1563,
+    ]
+    groot_auto_engage_s: float = 0.0
+    do_safety_check: bool = True
 
 @cfg_registry.register
 class g1_mjlab_locomimic_real(g1_mjlab_locomimic):

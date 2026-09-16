@@ -54,6 +54,16 @@ RJ_WAIST = slice(12, 15)
 RJ_LEFT_ARM = slice(15, 22)
 RJ_RIGHT_ARM = slice(22, 29)
 
+ARM_MIN = np.array([
+    -3.0892, -1.5882, -2.6180, -1.0472, -1.97222, -1.61443, -1.61443,   # left
+    -3.0892, -2.2515, -2.6180, -1.0472, -1.97222, -1.61443, -1.61443,   # right
+], dtype=np.float32)
+
+ARM_MAX = np.array([
+     2.6704,  2.2515,  2.6180,  2.0944,  1.97222,  1.61443,  1.61443,   # left
+     2.6704,  1.5882,  2.6180,  2.0944,  1.97222,  1.61443,  1.61443,   # right
+], dtype=np.float32)
+
 
 LEFT_HAND_FILL = np.array([-0.151, -0.316, -0.146, -0.325, 0.016, 0.147, 0.161], dtype=np.float32)
 RIGHT_HAND_FILL = np.array([0.018, 0.031, 0.030, 0.040, 0.125, -0.030, -0.025], dtype=np.float32)
@@ -95,7 +105,7 @@ class GrootArmSource:
         prompt: str,
         execution_horizon: int = 16,
         stale_after: float = 0.5,
-        max_step_per_tick: float = 0.02,
+        max_step_per_tick: float = 0.01,
     ):
         """
         policy           : PolicyClient or Gr00tPolicy, must expose get_action(obs)
@@ -174,6 +184,13 @@ class GrootArmSource:
             alpha = pos - i
             target = (1.0 - alpha) * chunk[i] + alpha * chunk[i + 1]
 
+        # Hard joint limits from the URDF, before the rate clamp.
+        clipped = np.clip(target, ARM_MIN, ARM_MAX)
+        if not np.array_equal(clipped, target):
+            logger.warning("joint limit clipped by %.3f rad",
+                           np.abs(clipped - target).max())
+        target = clipped
+
         # Rate clamp against what we actually commanded last tick.
         ref = self._last_output if self._last_output is not None else current_arms14
         delta = np.clip(target - ref, -self._max_step, self._max_step)
@@ -188,19 +205,20 @@ class GrootArmSource:
     # -- background inference ----------------------------------------------
 
     def _build_observation(self, state43: np.ndarray, frame: np.ndarray) -> dict:
-        obs = {
-            "state.left_leg": state43[G_LEFT_LEG][None, :],
-            "state.right_leg": state43[G_RIGHT_LEG][None, :],
-            "state.waist": state43[G_WAIST][None, :],
-            "state.left_arm": state43[G_LEFT_ARM][None, :],
-            "state.left_hand": state43[22:29][None, :],
-            "state.right_arm": state43[G_RIGHT_ARM][None, :],
-            "state.right_hand": state43[36:43][None, :],
-            "video.rs_view": frame[None, ...],
-            "annotation.human.task_description": [self._prompt],
+        return {
+            "video": {"rs_view": frame[None, None, ...].astype(np.uint8)},
+            "state": {
+                "left_leg":   state43[G_LEFT_LEG][None, None, :],
+                "right_leg":  state43[G_RIGHT_LEG][None, None, :],
+                "waist":      state43[G_WAIST][None, None, :],
+                "left_arm":   state43[G_LEFT_ARM][None, None, :],
+                "left_hand":  state43[22:29][None, None, :],
+                "right_arm":  state43[G_RIGHT_ARM][None, None, :],
+                "right_hand": state43[36:43][None, None, :],
+            },
+            "language": {"annotation.human.task_description": [[self._prompt]]},
         }
-        return obs
-
+        
     def _loop(self) -> None:
         while self._running:
             with self._lock:
@@ -215,12 +233,13 @@ class GrootArmSource:
                 state43 = rj29_to_groot43(state29)
                 obs = self._build_observation(state43, frame)
 
-                t_start = time.monotonic()
+                t_start = time.monotonic()                
                 action, _ = self._policy.get_action(obs)
+                logger.info("action keys: %s", list(action.keys()))
                 self._infer_latency = time.monotonic() - t_start
 
-                left = np.asarray(action["action.left_arm"])
-                right = np.asarray(action["action.right_arm"])
+                left = np.asarray(action["left_arm"])
+                right = np.asarray(action["right_arm"])
                 if left.ndim == 3:            # (B, T, D) -> unbatch
                     left, right = left[0], right[0]
                 chunk = np.concatenate(
@@ -230,6 +249,9 @@ class GrootArmSource:
                 if not np.all(np.isfinite(chunk)):
                     logger.error("non-finite GR00T output; dropping chunk")
                     continue
+                    
+                logger.info("chunk0 %s  range %.2f..%.2f",
+                np.round(chunk[0], 2), chunk.min(), chunk.max())
 
                 with self._lock:
                     # Anchor at t_start: the chunk is relative to the state we

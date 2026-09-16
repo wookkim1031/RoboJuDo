@@ -5,18 +5,40 @@ from robojudo.pipeline import pipeline_registry
 from robojudo.pipeline.rl_loco_mimic_pipeline import PolicyInterpManager, RlLocoMimicPipeline
 
 from .groot_arm_source import GrootArmSource
+from .groot_client import PolicyClient
 
 logger = logging.getLogger(__name__)
+
+_FRAMES = np.load("/opt/nb/ep0_frames.npy")
+
+class _FrameFeeder:
+    """Serves episode frames in order, advancing by the execution horizon
+    per inference — mirroring how open_loop_eval steps through the episode."""
+    def __init__(self, frames, stride):
+        self.frames, self.stride, self.i = frames, stride, 0
+
+    def __call__(self):
+        f = self.frames[min(self.i, len(self.frames) - 1)]
+        self.i += self.stride
+        return f
 
 @pipeline_registry.register
 class RlLocoGrootPipeline(RlLocoMimicPipeline):
     def __init__(self, cfg):
         self.groot_active = False
         self.groot_source: GrootArmSource | None = None  # set via attach_groot()
- 
-
+        self._groot_ever_ok = False
+        self._groot_auto_engaged = False
+        
         super().__init__(cfg=cfg)
 
+        self.attach_groot(GrootArmSource(
+            policy=PolicyClient(host=cfg.groot_host, port=cfg.groot_port),
+            camera_read=_FrameFeeder(_FRAMES, cfg.groot_execution_horizon),
+            prompt=cfg.groot_prompt,
+            execution_horizon=cfg.groot_execution_horizon,
+        ))
+        
         n = len(self.override_dof_indices)
         if n != 14:
             logger.warning("override covers %d joints, expected 14", n)
@@ -55,6 +77,16 @@ class RlLocoGrootPipeline(RlLocoMimicPipeline):
         logger.info("GR00T engaged")
 # --------------- control loop ---------------------
     def step(self, dry_run = False): 
+        if (
+            not self.groot_active
+            and not self._groot_auto_engaged 
+            and self.cfg.groot_auto_engage_s > 0
+            and self.timestep > self.cfg.groot_auto_engage_s * self.freq
+            and self.groot_source is not None
+        ):
+            self._groot_auto_engaged = True
+            self.engage_groot() 
+            
         self.env.update()
         env_data = self.env.get_data()
         ctrl_data = self.ctrl_manager.get_ctrl_data(env_data)
@@ -72,9 +104,11 @@ class RlLocoGrootPipeline(RlLocoMimicPipeline):
         ):
             arms = self.groot_source.latest_arm_target(self._current_arms14())
             if arms is None:
-                logger.error("GR00T output unavailable; bailing out")
-                self.bail_arms_to_default()
+                if self._groot_ever_ok:
+                    logger.error("GR00T output unavailable; bailing out")
+                    self.bail_arms_to_default()
             else:
+                self._groot_ever_ok = True
                 self.policy_manager.override_dof_pos[self.override_dof_indices] = arms
 
         if self.policy_manager.current_policy_id == self.policy_manager.policy_loco_id:
